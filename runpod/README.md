@@ -16,8 +16,11 @@ images built by you and the models baked in.
 
 - A RunPod account with an API key and **your SSH public key in Settings >
   SSH Public Keys**. The pods are reachable only over SSH.
-- Docker with buildx, and a registry (GHCR, Docker Hub). RunPod hosts are
-  x86_64, so images build for `linux/amd64`.
+- A registry (GHCR, Docker Hub) and a way to build `linux/amd64` images (RunPod
+  hosts are x86_64): Docker with buildx on an x86 machine, or the repo's
+  `build-image` GitHub Actions workflow, which builds on a hosted runner and
+  pushes to `ghcr.io/<owner>/<repo>/<recipe>`. Building these CUDA images under
+  emulation on an ARM machine is very slow.
 - bash 4.4 or newer, `python3`, `curl`, `ssh`. macOS ships bash 3.2:
   `brew install bash`.
 - Optional: `cloudflared` and a domain on Cloudflare for the Cloudflare Tunnel
@@ -44,7 +47,7 @@ never as an argument a process listing would show.
 ```bash
 cd runpod/pods/<recipe>
 cp pod.env.example pod.env      # edit RUNPOD_IMAGE, GPU lists, ports
-../../pod-kit/build.sh .        # build and push a new tag
+../../pod-kit/build.sh .        # build and push a new tag (or: gh workflow run build-image.yml -f recipe=<recipe> -f tag=v2)
 ../../pod-kit/pod.sh . setup    # registry auth + template (re-run after an image change)
 ../../pod-kit/pod.sh . start    # or: start <list>, e.g. start video
 ../../pod-kit/pod.sh . status

@@ -49,6 +49,11 @@ def _download(url: str, dest: str) -> None:
             out.write(chunk)
 
 
+def _sec(value: Any) -> float:
+    # faster-whisper returns numpy floats; plain floats keep the output clean JSON
+    return round(float(value), 3)
+
+
 def _transcribe(req: TranscribeRequest, path: str) -> Dict[str, Any]:
     segments, info = MODEL.transcribe(
         path,
@@ -61,17 +66,17 @@ def _transcribe(req: TranscribeRequest, path: str) -> Dict[str, Any]:
     # segments is a generator: the decoding happens while it is consumed
     out_segments = []
     for seg in segments:
-        item: Dict[str, Any] = {"start": round(seg.start, 3), "end": round(seg.end, 3), "text": seg.text.strip()}
+        item: Dict[str, Any] = {"start": _sec(seg.start), "end": _sec(seg.end), "text": seg.text.strip()}
         if req.word_timestamps and seg.words:
             item["words"] = [
-                {"start": round(w.start, 3), "end": round(w.end, 3), "word": w.word, "probability": round(w.probability, 3)}
+                {"start": _sec(w.start), "end": _sec(w.end), "word": w.word, "probability": _sec(w.probability)}
                 for w in seg.words
             ]
         out_segments.append(item)
     return {
         "language": info.language,
-        "language_probability": round(info.language_probability, 3),
-        "duration": round(info.duration, 3),
+        "language_probability": _sec(info.language_probability),
+        "duration": _sec(info.duration),
         "text": " ".join(s["text"] for s in out_segments),
         "segments": out_segments,
     }

@@ -33,7 +33,7 @@ cp pod.env.example pod.env          # set RUNPOD_IMAGE to your registry
 ../../pod-kit/pod.sh . setup
 ../../pod-kit/pod.sh . start photo  # stills: cheapest card first
 ../../pod-kit/pod.sh . start video  # video: NVENC cards, 24+ vCPUs per GPU
-# open http://127.0.0.1:17860
+# open http://127.0.0.1:17960
 ../../pod-kit/pod.sh . stop
 ```
 
@@ -88,5 +88,7 @@ expression. Leave out profiles, blurred shots and beauty filters.
 
 ## Status
 
-Built from a pod setup in regular use. This copy has not been built yet.
-Check the first build and a first photo and video job before relying on it.
+Built and run with FaceFusion's own example assets (`source.jpg`, a 240p
+270-frame clip), headless over SSH: the video job took about 60 s including
+model loading, encoded with `h264_nvenc`, and a photo job about 30 s. The
+browser UI was not exercised.

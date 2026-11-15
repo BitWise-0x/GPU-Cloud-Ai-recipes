@@ -39,7 +39,7 @@ cp pod.env.example pod.env          # set RUNPOD_IMAGE to your registry
 ../../pod-kit/build.sh .            # build for linux/amd64 and push
 ../../pod-kit/pod.sh . setup        # registry auth + RunPod template
 ../../pod-kit/pod.sh . start        # allocate, wait, open the tunnel
-# open http://127.0.0.1:18188, load a workflow from the Workflows panel,
+# open http://127.0.0.1:18288, load a workflow from the Workflows panel,
 # upload a clip, queue it
 ../../pod-kit/pod.sh . stop         # billing stops
 ```
@@ -50,6 +50,9 @@ the command), before you stop the pod.
 
 ## Tips
 
+- The workflows carry the source audio into the output. A source with no
+  audio track makes Load Video fail ("failed to extract audio"): disconnect
+  the audio link into Video Combine for silent clips.
 - Interlaced sources (480i/576i, combing on motion) need deinterlacing first:
   `ffmpeg -i in.mkv -vf bwdif -c:v libx264 -crf 14 -c:a copy out.mp4`.
 - Output quality: crf 16 to 20 with libx264 looks the same as the source to
@@ -65,6 +68,8 @@ the command), before you stop the pod.
 
 ## Status
 
-Built from a pod setup in regular use. This upstream-only copy has not been
-built yet. Check the first build and the first run of each workflow before
-relying on it.
+Built and run on an L40S: the fast workflow upscaled a 270-frame 240p clip to
+852x452 in about 5 s, and SeedVR2 3B restored 33 frames to 904x480 in about
+9 s, both encoded with NVENC and with the source audio. The jobs were queued
+through ComfyUI's API, not the browser UI. Through the API, the resize node's
+height input is `resize_type.shorter_size`.

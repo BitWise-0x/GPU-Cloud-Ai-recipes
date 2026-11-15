@@ -68,7 +68,7 @@ cd runpod/serverless/whisper
 
 # 1. build and push (linux/amd64; on an ARM Mac this emulates and is slow)
 docker buildx build --platform linux/amd64 --provenance=false \
-  -t ghcr.io/your-user/whisper-worker:v1 --push .
+  -t ghcr.io/your-user/gpu-cloud-recipes/whisper-worker:v1 --push .
 
 # 2. spec: copy and set the image (and registryName for a private image:
 #    a registry auth created once in the RunPod console, Settings > Container
@@ -85,7 +85,7 @@ python3 ../deploy/runpod_deploy.py run endpoint.json test_input.json
 
 # 5. later builds: pin the endpoint to the pushed digest
 python3 ../deploy/runpod_deploy.py pin endpoint.json \
-  ghcr.io/your-user/whisper-worker@sha256:<digest>
+  ghcr.io/your-user/gpu-cloud-recipes/whisper-worker@sha256:<digest>
 python3 ../deploy/runpod_deploy.py status endpoint.json
 ```
 
@@ -102,5 +102,8 @@ endpoints, releases, GPU pools and cold starts behave.
 
 ## Status
 
-Unbuilt. The Dockerfile, handler and deploy script have not run against RunPod
-yet. The validation tests pass.
+The image is built and the handler ran on a RunPod GPU (L4) through the SDK's
+`--test_input` mode: the model loaded in about 2 s and the sample clip came
+back correct, with word timestamps, in about 1.3 s. `runpod_deploy.py apply`
+created a template; the endpoint itself, `pin` and `run` are untested, because
+the test account had no serverless worker quota left.
