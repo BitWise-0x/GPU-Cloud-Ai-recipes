@@ -1,3 +1,5 @@
 runpod==2.1.0
 faster-whisper==1.2.1
 ctranslate2==4.8.3
+# faster-whisper 1.2.1 passes metadata_errors to av.open(), which PyAV 19 removed
+av==18.1.0

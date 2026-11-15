@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.6
 #
 # RunPod serverless worker: faster-whisper large-v3, weights baked in.
-#   faster-whisper  1.2.1, on CTranslate2 4.8.3 (CUDA 12 + cuDNN 9)
+#   faster-whisper  1.2.1, on CTranslate2 4.8.3 (CUDA 12 + cuDNN 9) and PyAV 18.1
 #   model           Systran/faster-whisper-large-v3 (MIT), pinned by commit
 #   runpod          2.1.0 (the serverless SDK)
 #
