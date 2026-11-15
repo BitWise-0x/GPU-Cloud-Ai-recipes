@@ -1,0 +1,89 @@
+# Build one recipe's image on a GitHub-hosted runner and push it to this
+# account's GHCR. Run it by hand: Actions > build-image > Run workflow, or
+#   gh workflow run build-image.yml -f recipe=facefusion -f tag=v1
+#
+# A new package on a personal account starts private. RunPod then needs a
+# read-only token for it (REGISTRY_USER / REGISTRY_TOKEN, runpod/README.md).
+
+name: build-image
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipe:
+        description: recipe to build
+        required: true
+        type: choice
+        options:
+          - comfyui-upscale
+          - facefusion
+          - whisper-worker
+      tag:
+        description: image tag (a new one per build)
+        required: true
+        default: v1
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: target
+        env:
+          RECIPE: ${{ inputs.recipe }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          case "${RECIPE}" in
+            whisper-worker) context=runpod/serverless/whisper ;;
+            *)              context="runpod/pods/${RECIPE}" ;;
+          esac
+          [[ "${TAG}" =~ ^[A-Za-z0-9_.-]+$ ]] || { echo "bad tag: ${TAG}" >&2; exit 1; }
+          echo "context=${context}" >> "$GITHUB_OUTPUT"
+          # GHCR wants a lowercase repository path, and owner names can have capitals
+          echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${RECIPE}" >> "$GITHUB_OUTPUT"
+
+      # The CUDA images need more than the runner's free space: drop the
+      # preinstalled toolchains these builds never use.
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift
+          sudo docker image prune --all --force
+          df -h /
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ steps.target.outputs.context }}
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: ${{ steps.target.outputs.image }}:${{ inputs.tag }}
+
+      - name: Summary
+        env:
+          IMAGE: ${{ steps.target.outputs.image }}
+          TAG: ${{ inputs.tag }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          {
+            echo "image: \`${IMAGE}:${TAG}\`"
+            echo
+            echo "digest: \`${IMAGE}@${DIGEST}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          df -h /
