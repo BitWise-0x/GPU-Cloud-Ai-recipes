@@ -45,8 +45,9 @@ jobs:
           esac
           [[ "${TAG}" =~ ^[A-Za-z0-9_.-]+$ ]] || { echo "bad tag: ${TAG}" >&2; exit 1; }
           echo "context=${context}" >> "$GITHUB_OUTPUT"
-          # GHCR wants a lowercase repository path, and owner names can have capitals
-          echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${RECIPE}" >> "$GITHUB_OUTPUT"
+          # under the repo's own path, so a recipe never collides with another
+          # package of the same name on the account; GHCR wants it lowercase
+          echo "image=ghcr.io/${GITHUB_REPOSITORY,,}/${RECIPE}" >> "$GITHUB_OUTPUT"
 
       # The CUDA images need more than the runner's free space: drop the
       # preinstalled toolchains these builds never use.
