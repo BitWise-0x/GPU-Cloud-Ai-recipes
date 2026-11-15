@@ -53,7 +53,11 @@ WORKDIR /app
 COPY validation.py handler.py /app/
 
 # Fail the build, not a billed worker, if the model files do not load as a
-# Whisper model. CPU here: the builder has no GPU.
-RUN python -c "from faster_whisper import WhisperModel; WhisperModel('/models/whisper', device='cpu', compute_type='int8'); print('model loads')"
+# Whisper model, or if faster-whisper cannot decode audio with the PyAV it got
+# (a new PyAV once broke every job). CPU here: the builder has no GPU.
+RUN python -c "import wave; w = wave.open('/tmp/t.wav', 'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(bytes(32000)); w.close(); \
+from faster_whisper.audio import decode_audio; assert len(decode_audio('/tmp/t.wav')) == 16000; \
+from faster_whisper import WhisperModel; WhisperModel('/models/whisper', device='cpu', compute_type='int8'); print('audio decodes, model loads')" \
+    && rm /tmp/t.wav
 
 CMD ["python", "-u", "/app/handler.py"]
