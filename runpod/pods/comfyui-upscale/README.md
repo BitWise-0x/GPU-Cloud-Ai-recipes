@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/ComfyUI-v0.45.2-555?style=flat-square" alt="ComfyUI v0.45.2"/>
   <img src="https://img.shields.io/badge/CUDA-13.0-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="CUDA 13.0"/>
   <img src="https://img.shields.io/badge/encode-h264__nvenc_%7C_libx264-007808?style=flat-square&logo=ffmpeg&logoColor=white" alt="NVENC or libx264"/>
-  <img src="https://img.shields.io/badge/tested-L40S-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="Tested on L40S"/>
+  <img src="https://img.shields.io/badge/GPUs-L40_%7C_L40S_first-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="L40 and L40S first"/>
 </p>
 
 <p align="center">
@@ -124,7 +124,7 @@ documents every value):
 | `RUNPOD_TUNNEL_PORT` | `18288` | the local end of the SSH tunnel |
 | `RUNPOD_CONTAINER_DISK_GB` | `120` | container disk: the image, SeedVR2, inputs and outputs |
 | `RUNPOD_GPU_TYPES` | NVENC cards first (L40, L40S, A6000, ...), A100 / H100 / H200 last | GPU list, walked left to right |
-| `RUNPOD_MIN_VCPU_PER_GPU` | `16` | vCPU floor for the first walks, then dropped (`RUNPOD_MIN_VCPU_STRICT=0`) |
+| `RUNPOD_MIN_VCPU_PER_GPU` | `24` | vCPU floor per GPU; strict (`RUNPOD_MIN_VCPU_STRICT=1`): start gives up after the walks rather than take a smaller host |
 | `COMFYUI_SEEDVR2_MODEL` | `seedvr2_3b_fp16.safetensors` | SeedVR2 checkpoint fetched at boot, or `none` |
 | `CF_TUNNEL_NAME`, `CF_PUBLIC_HOSTNAME` | empty | optional Cloudflare Tunnel ([`docs/access.md`](../../docs/access.md)) |
 

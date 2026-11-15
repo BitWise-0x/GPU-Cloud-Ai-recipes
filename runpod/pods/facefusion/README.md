@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/CUDA-13.0-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="CUDA 13.0"/>
   <img src="https://img.shields.io/badge/content_analyser-on-2E7D32?style=flat-square" alt="Content analyser on"/>
   <img src="https://img.shields.io/badge/license-OpenRAIL--AS-blue?style=flat-square" alt="OpenRAIL-AS"/>
-  <img src="https://img.shields.io/badge/tested-RTX_PRO_6000-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="Tested on RTX PRO 6000"/>
+  <img src="https://img.shields.io/badge/video_GPUs-L40_%7C_L40S_first-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="L40 and L40S first for video"/>
 </p>
 
 <p align="center">

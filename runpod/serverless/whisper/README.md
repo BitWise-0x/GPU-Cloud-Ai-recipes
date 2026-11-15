@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/model-faster--whisper_large--v3-555?style=flat-square" alt="faster-whisper large-v3"/>
   <img src="https://img.shields.io/badge/CUDA-12.8_+_cuDNN_9-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="CUDA 12.8"/>
   <img src="https://img.shields.io/badge/workers-0..2-673AB7?style=flat-square" alt="Scales to zero"/>
-  <img src="https://img.shields.io/badge/tested-L4-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="Tested on L4"/>
+  <img src="https://img.shields.io/badge/GPU_pools-24_GB_%7C_48_GB-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="24 GB and 48 GB pools"/>
 </p>
 
 <p align="center">

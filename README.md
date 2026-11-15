@@ -42,11 +42,11 @@ Prerequisites, secrets and the full pod session: [`runpod/README.md`](runpod/REA
 
 ## Recipes
 
-| Recipe | Kind | What it runs | Models | Tested on |
+| Recipe | Kind | What it runs | Models | GPUs |
 |---|---|---|---|---|
-| [`comfyui-upscale`](runpod/pods/comfyui-upscale/) | Pod | ComfyUI v0.45.2 with two video upscale workflows: per-frame models and SeedVR2 diffusion restore | SPAN, RealPLKSR, Real-ESRGAN, RIFE (baked); SeedVR2 3B (fetched at boot) | L40S |
-| [`facefusion`](runpod/pods/facefusion/) | Pod | FaceFusion 3.9.2 with its content analyser | swappers, detectors, masks, enhancers (baked) | RTX PRO 6000 |
-| [`whisper`](runpod/serverless/whisper/) | Serverless | scale-to-zero speech to text: audio URL in, text and timed segments out | faster-whisper large-v3 (baked) | L4 |
+| [`comfyui-upscale`](runpod/pods/comfyui-upscale/) | Pod | ComfyUI v0.45.2 with two video upscale workflows: per-frame models and SeedVR2 diffusion restore | SPAN, RealPLKSR, Real-ESRGAN, RIFE (baked); SeedVR2 3B (fetched at boot) | 48 GB NVENC cards first (L40, L40S, A6000, 6000 Ada), then RTX PRO 6000; A100, H100, H200 last |
+| [`facefusion`](runpod/pods/facefusion/) | Pod | FaceFusion 3.9.2 with its content analyser | swappers, detectors, masks, enhancers (baked) | photo: 16 GB+ cards, cheapest first; video: L40 and L40S first, NVENC cards before A100 and H100 |
+| [`whisper`](runpod/serverless/whisper/) | Serverless | scale-to-zero speech to text: audio URL in, text and timed segments out | faster-whisper large-v3 (baked) | 24 GB and 48 GB pools (Ampere, Ada) |
 
 The repo ships Dockerfiles only, never built images. You build each image into
 your own registry, which keeps model licenses and image contents under your
