@@ -1,0 +1,25 @@
+{
+  "template": {
+    "name": "whisper-worker",
+    "image": "ghcr.io/your-user/whisper-worker:v1",
+    "disk": 20,
+    "registryName": null,
+    "env": {
+      "MAX_AUDIO_MB": "500"
+    },
+    "envFromShell": []
+  },
+  "endpoint": {
+    "name": "whisper",
+    "workers": { "min": 0, "max": 2 },
+    "scaling": { "type": "REQUEST_COUNT", "requestCount": 1 },
+    "timeout": 600000,
+    "flashboot": "FLASHBOOT",
+    "gpu": {
+      "count": 1,
+      "pools": ["AMPERE_24", "ADA_24", "AMPERE_48"],
+      "excludedTypes": [],
+      "minCudaVersion": "12.8"
+    }
+  }
+}

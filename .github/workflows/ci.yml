@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: shellcheck
+        run: |
+          shellcheck -x -S warning -e SC1091 \
+            runpod/pod-kit/pod.sh runpod/pod-kit/build.sh runpod/pod-kit/lib/common.sh \
+            runpod/pods/*/start.sh
+
+      - name: pod-kit tests
+        run: for t in runpod/pod-kit/tests/test_*.sh; do bash "$t" || exit 1; done
+
+      - name: worker tests
+        run: python3 -m unittest discover -s runpod/serverless/whisper/tests -v
+
+      - name: deploy script compiles
+        run: python3 -m py_compile runpod/serverless/deploy/runpod_deploy.py

@@ -1,0 +1,11 @@
+# local config and secrets
+pod.env
+.secrets.env
+*.secrets.env
+
+# pod.sh state
+.runpod-*
+
+.DS_Store
+__pycache__/
+*.pyc

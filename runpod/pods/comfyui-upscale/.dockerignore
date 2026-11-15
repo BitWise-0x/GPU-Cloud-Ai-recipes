@@ -1,0 +1,14 @@
+# Allowlist: deny everything, then permit only what the Dockerfile COPYs, so
+# pod.env, state files and docs never enter the image. Add an !allow line for
+# every new COPY.
+*
+
+!Dockerfile
+!build_assets/
+!start.sh
+
+# Re-exclude junk even inside allowed dirs.
+**/.DS_Store
+**/*.log
+**/__pycache__
+**/README.md

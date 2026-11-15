@@ -1,0 +1,6 @@
+# Allowlist: deny everything, then permit only what the Dockerfile COPYs, so
+# pod.env, state files and docs never enter the image.
+*
+
+!Dockerfile
+!start.sh
