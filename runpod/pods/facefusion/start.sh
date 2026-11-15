@@ -21,10 +21,9 @@ LISTEN="${FACEFUSION_LISTEN:-127.0.0.1}"
 export GRADIO_SERVER_NAME="${LISTEN}"
 export GRADIO_SERVER_PORT="${PORT}"
 
-# One OpenCV thread per frame worker. OpenCV sizes its own pool to the CPU
-# quota, so each of the execution_thread_count frame workers would spread every
-# resize, rotate and warp over a second pool of the same size, and the extra
-# threads contend for the same few cores.
+# One OpenCV thread per frame worker. OpenCV sizes its pool to the CPU quota,
+# so each of the execution_thread_count workers would run a full-size pool of
+# its own, all contending for the same few cores.
 export OPENCV_FOR_THREADS_NUM=1
 
 # Video encodes on the GPU's NVENC when it has one (A100 and H100 have none):

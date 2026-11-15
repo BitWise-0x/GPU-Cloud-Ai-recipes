@@ -38,7 +38,7 @@ check "pattern: capacity"               yes "insufficient capacity"
 check "pattern: unavailable"            yes "GPU type temporarily unavailable"
 check "pattern: out of stock"           yes "GPU out of stock"
 
-# --- NOT retryable: hard errors where retrying is pointless/harmful ---
+# --- NOT retryable: hard errors ---
 check "401 unauthorized"                no  "Unauthorized"
 check "403 forbidden"                   no  "You do not have permission to perform this action."
 check "404 template not found"          no  "template not found"

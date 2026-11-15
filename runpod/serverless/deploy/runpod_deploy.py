@@ -28,8 +28,8 @@ from typing import Any, Dict, List, Optional
 
 API = "https://api.runpod.io/v2"
 JOB_API = "https://api.runpod.ai/v2"
-# endpoint fields `apply` owns on an existing endpoint; reach the autoscaler
-# without a new release, except gpu, which cuts one
+# endpoint fields `apply` sets on an existing endpoint; all but gpu take effect
+# without cutting a new release
 ENDPOINT_FIELDS = ("workers", "scaling", "timeout", "flashboot", "gpu")
 
 
@@ -177,12 +177,10 @@ def cmd_apply(spec: Dict[str, Any]) -> None:
 
 
 def cmd_pin(spec: Dict[str, Any], image: str) -> None:
-    """Point the template and the endpoint at an image digest. The endpoint
-    holds its own copy of the image (a template is copied into an endpoint once,
-    at create), so the endpoint PATCH is what rolls workers; the template is set
-    first so it stays a true record of what runs. A tag would not do: PATCHing
-    the same tag again is no change, so RunPod cuts no release and keeps
-    running whatever that tag resolved to before."""
+    """The endpoint copies its template's image once, at create, so the endpoint
+    PATCH is what rolls workers; the template is patched too so it records what
+    runs. Digest only: re-PATCHing an unchanged tag cuts no release, and workers
+    keep whatever that tag resolved to before."""
     if "@sha256:" not in image:
         sys.exit("error: pin takes repo@sha256:<digest>, not a tag")
     tpl_id = find_by_name("/templates", "templates", spec["template"]["name"])

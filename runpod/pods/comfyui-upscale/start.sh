@@ -30,8 +30,8 @@ echo "sshd started (key auth only)"
 PORT="${COMFYUI_PORT:-8188}"
 LISTEN="${COMFYUI_LISTEN:-127.0.0.1}"
 EXTRA_ARGS="${COMFYUI_EXTRA_ARGS:-}"
-# 16 GB default: whole films are uploaded as single files. The upload size cap
-# is ComfyUI's own --max-upload-size (stock 100 MB), not the proxy's.
+# ComfyUI's --max-upload-size (stock 100 MB). 16 GB default: whole films are
+# uploaded as single files.
 MAX_UPLOAD_MB="${COMFYUI_MAX_UPLOAD_MB:-16384}"
 # Which SeedVR2 diffusion model to download, or "none". 3B fp16 fits the 48 GB
 # tier at 1080p; the 7B files want an 80 GB card.
@@ -40,10 +40,10 @@ SEEDVR2_MODEL="${COMFYUI_SEEDVR2_MODEL:-seedvr2_3b_fp16.safetensors}"
 # No VRAM flag: --highvram pins most of host RAM and can get the container
 # OOM-killed; ComfyUI's default management fits the 48 GB cards this targets.
 
-# CPU quota: the pod sees every host CPU (nproc can say 128) but runs on a
-# cgroup quota of a few dozen vCPUs. torch and OpenCV size their thread pools to
-# the visible CPUs unless told otherwise, and that many busy threads on a small
-# quota throttle the whole container. Cap the pools at the quota.
+# The pod sees every host CPU (nproc can say 128) but runs on a cgroup quota of
+# a few dozen vCPUs. torch and OpenCV size their thread pools to the visible
+# CPUs, and that many busy threads on a small quota throttle the container, so
+# cap the pools at the quota.
 CPU_QUOTA="none"
 if read -r quota period 2>/dev/null < /sys/fs/cgroup/cpu.max && [[ "${quota}" != "max" ]]; then
   CPU_QUOTA=$(( (quota + period - 1) / period ))
@@ -105,15 +105,13 @@ else
     fetch_seedvr2 diffusion_models "${SEEDVR2_MODEL}" ) || true &
 fi
 
-# VideoHelperSuite writes video through the auto-h264-mp4 format, which this
-# script writes before ComfyUI starts: h264_nvenc when the GPU has an encoder
-# (L40, L40S, A6000, 6000 Ada), libx264 with VHS's stock h264-mp4 arguments when
-# it has none (A100, H100). NVENC runs at preset p4, tune
-# hq, constant quality from its own cq widget; the workflows carry cq = crf + 6,
-# where NVENC matched libx264's quality at a smaller size (VMAF 96.5 at cq 24
-# against 95.8 at crf 18, 3.4 MB against 4.4). Each host uses the widget its
-# format has and ignores the other. VHS uses the image's NVENC-capable ffmpeg,
-# not the one it would pick by score.
+# VHS writes video through the auto-h264-mp4 format generated here: h264_nvenc
+# when the GPU has an encoder (L40, L40S, A6000, 6000 Ada), else libx264 with
+# VHS's stock h264-mp4 arguments (A100, H100). NVENC runs preset p4, tune hq,
+# constant quality from its cq widget. The workflows set cq = crf + 6, where
+# NVENC matched libx264's quality at a smaller size (VMAF 96.5 at cq 24 vs 95.8
+# at crf 18, 3.4 MB vs 4.4). Each format reads its own widget and ignores the
+# other. VHS is forced onto the image's NVENC-capable ffmpeg.
 export VHS_FORCE_FFMPEG_PATH=/opt/ffmpeg/bin/ffmpeg
 VHS_FORMAT=/workspace/ComfyUI/custom_nodes/comfyui-videohelpersuite/video_formats/auto-h264-mp4.json
 if "${VHS_FORCE_FFMPEG_PATH}" -v error -f lavfi -i nullsrc=s=256x256 -frames:v 1 -c:v h264_nvenc -f null - 2>/dev/null; then

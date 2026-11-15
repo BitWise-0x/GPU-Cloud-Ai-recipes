@@ -1,8 +1,7 @@
 """RunPod serverless worker: speech to text with faster-whisper.
 
-The model is baked into the image (Dockerfile) and loaded once per worker, at
-import, so a warm worker answers a job without touching disk or the network for
-weights. Input:
+The model is baked into the image and loaded once per worker at import, so a
+warm worker loads no weights per job. Input:
 
     {"audio_url": "https://...", "language": "en", "task": "transcribe",
      "beam_size": 5, "vad_filter": true, "word_timestamps": false}
@@ -29,7 +28,7 @@ DOWNLOAD_TIMEOUT_S = int(os.environ.get("DOWNLOAD_TIMEOUT_S", "120"))
 
 _t0 = time.monotonic()
 # Loaded at import: a model that cannot load fails the worker at start, where
-# RunPod's worker logs show it, instead of failing every job one by one.
+# RunPod's worker logs show it, not on each job.
 MODEL = WhisperModel(MODEL_DIR, device="cuda", compute_type=COMPUTE_TYPE)
 print(f"model loaded from {MODEL_DIR} ({COMPUTE_TYPE}) in {time.monotonic() - _t0:.1f}s", flush=True)
 
@@ -107,9 +106,8 @@ def handler(job: Dict[str, Any]) -> Dict[str, Any]:
             result = _transcribe(req, path)
         except RuntimeError as exc:
             if _is_cuda_oom(exc):
-                # CUDA can be left in a bad state after an out-of-memory error,
-                # and every later job on this worker would fail the same way.
-                # refresh_worker has RunPod replace the worker after this job.
+                # an OOM can leave CUDA unusable for every later job on this worker;
+                # refresh_worker has RunPod replace the worker after this job
                 return {"error": f"GPU out of memory: {exc}", "refresh_worker": True}
             raise
         result["processing_s"] = round(time.monotonic() - t0, 3)

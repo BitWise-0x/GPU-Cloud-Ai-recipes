@@ -5,13 +5,13 @@
   <img src="https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Cloudflare"/>
   <br>
   <br>
-  <code><strong>gpu-cloud-recipes</strong></code>
+  <code><strong>GPU-cloud-recipes</strong></code>
 </h1>
 
 <p align="center">
-  <img src="https://img.shields.io/github/license/BitWise-0x/gpu-cloud-recipes?style=flat-square&color=blue" alt="License"/>
-  <img src="https://img.shields.io/github/last-commit/BitWise-0x/gpu-cloud-recipes?style=flat-square&color=green" alt="Last Commit"/>
-  <img src="https://github.com/BitWise-0x/gpu-cloud-recipes/actions/workflows/ci.yml/badge.svg" alt="CI"/>
+  <img src="https://img.shields.io/github/license/BitWise-0x/GPU-cloud-recipes?style=flat-square&color=blue" alt="License"/>
+  <img src="https://img.shields.io/github/last-commit/BitWise-0x/GPU-cloud-recipes?style=flat-square&color=green" alt="Last Commit"/>
+  <img src="https://github.com/BitWise-0x/GPU-cloud-recipes/actions/workflows/ci.yml/badge.svg" alt="CI"/>
   <img src="https://img.shields.io/badge/platform-linux%2Famd64-555?style=flat-square&logo=linux&logoColor=white" alt="linux/amd64"/>
 </p>
 
@@ -26,7 +26,7 @@
 ## Quick Start
 
 ```bash
-git clone https://github.com/BitWise-0x/gpu-cloud-recipes && cd gpu-cloud-recipes/runpod/pods/comfyui-upscale
+git clone https://github.com/BitWise-0x/GPU-cloud-recipes && cd GPU-cloud-recipes/runpod/pods/comfyui-upscale
 cp pod.env.example pod.env          # point RUNPOD_IMAGE at your registry
 ../../pod-kit/build.sh .            # or: gh workflow run build-image.yml -f recipe=comfyui-upscale -f tag=v1
 ../../pod-kit/pod.sh . setup        # registry auth + RunPod template

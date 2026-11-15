@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Tests how stop waits for a deleted pod (not the live
-# API), asserting:
+# Tests how stop waits for a deleted pod (not the live API), asserting:
 #   - a pod that shows EXITED for a while after the delete, then 404s, is gone
 #   - a pod still listed after RUNPOD_DELETE_WAIT seconds is reported, exit 1
 # Run: ./pod-kit/tests/test_wait_gone.sh

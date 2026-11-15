@@ -17,13 +17,10 @@ if (( BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 4) ))
 fi
 
 # Config: pod.env (per recipe) then the secrets file (shared, gitignored).
-#
-# Plain `set -a; source pod.env` lets the file clobber anything the caller
-# exported, which breaks one-run overrides like
-# `RUNPOD_GPU_TYPES="NVIDIA L40S" ./pod.sh <dir> start`. Snapshot the caller's
-# exported variables, source the files, then restore the RUNPOD_*, REGISTRY_*,
-# CF_* and POD_* ones, and those under the recipe's POD_ENV_PREFIX (known only
-# once pod.env is loaded), so caller values win.
+# Caller-exported RUNPOD_*, REGISTRY_*, CF_*, POD_* and POD_ENV_PREFIX variables
+# win over both files, so one-run overrides like
+# `RUNPOD_GPU_TYPES="NVIDIA L40S" ./pod.sh <dir> start` work. They are restored
+# after sourcing because the prefix is known only once pod.env is loaded.
 declare -A _CALLER_ENV=()
 for _v in $(compgen -e); do
   _CALLER_ENV["${_v}"]="${!_v}"
@@ -65,7 +62,6 @@ unset _v _CALLER_ENV
 # the request bodies are built by inline python, which reads os.environ
 export RUNPOD_TEMPLATE_NAME RUNPOD_CONTAINER_DISK_GB RUNPOD_VOLUME_GB RUNPOD_CLOUD_TYPE
 
-# REST API v2.
 API="https://api.runpod.io/v2"
 
 # State files: one recipe directory, one pod. pod.sh uses them.
@@ -595,11 +591,10 @@ _rp_is_retryable_err() {
 }
 
 # rp_datacenter_ids_json : JSON list of the data centers in RUNPOD_COUNTRY_CODES,
-# or [] when unset. v2 pod create has no country filter, only dataCenterIds;
-# data center ids lead with a country or region code (US-TX-3, CA-MTL-1,
-# EU-NL-1), and RUNPOD_COUNTRY_CODES matches that first part. dataCenterIds acts
-# as a hard filter: a data center left out means no capacity there, not a
-# fallback.
+# or [] when unset. v2 pod create has no country filter, only dataCenterIds,
+# whose ids lead with the country or region code RUNPOD_COUNTRY_CODES matches
+# (US-TX-3, CA-MTL-1, EU-NL-1). dataCenterIds is a hard filter: a data center
+# left out is never used, not a fallback.
 rp_datacenter_ids_json() {
   local codes="${RUNPOD_COUNTRY_CODES:-}"
   [[ -z "${codes// }" ]] && { echo "[]"; return 0; }

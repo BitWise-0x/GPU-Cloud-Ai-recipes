@@ -2,7 +2,7 @@
 #
 # FaceFusion pod for RunPod (the standalone Gradio app, not ComfyUI).
 # Pinned versions:
-#   FaceFusion       3.9.2   (upstream facefusion/facefusion, unmodified)
+#   FaceFusion       3.9.2   (facefusion/facefusion)
 #   onnxruntime-gpu  1.31.0  (3.9.2 installer.py's cuda@13 pin)
 #   FFmpeg           8.1.3   (BtbN linux64-gpl build with NVENC, pinned + sha256)
 #   cloudflared      2026.10.3 (Cloudflare Tunnel connector, pinned + sha256)
@@ -17,12 +17,11 @@
 # private.
 
 # -----------------------------------------------------------------------------
-# Stage `models`: fetch the baked model subset (.onnx + .hash pairs) into the
-# flat .assets/models layout FaceFusion expects. Pinned by digest so a moved
-# alpine tag cannot re-run the downloads; fixed mtime so an identical re-fetch
-# keeps the same layer digest and is not re-pushed. One RUN per model keeps a
-# model swap scoped to one layer. The release tag per file comes from 3.9.2's
-# create_static_model_set in each module.
+# Stage `models`: the baked model subset (.onnx + .hash pairs) in the flat
+# .assets/models layout FaceFusion expects. Base pinned by digest so a moved
+# alpine tag cannot re-run the downloads; one RUN per model scopes a swap to
+# one layer. Release tags per file come from 3.9.2's create_static_model_set in
+# each module.
 # -----------------------------------------------------------------------------
 FROM alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc AS models
 RUN apk add --no-cache wget
@@ -79,7 +78,7 @@ RUN wget -q ${A}/models-3.0.0/codeformer.onnx \
 #   fan_68_5     the 68->5 landmark converter, loaded with every landmarker
 #   fairface     the face classifier (age, gender, race) the selector uses
 #   kim_vocal_2  the default voice extractor, for video audio handling
-#   nsfw_1/2/3   upstream's content analyser, which checks every source and
+#   nsfw_1/2/3   FaceFusion's content analyser, which checks every source and
 #                target before processing
 RUN wget -q ${A}/models-3.0.0/fan_68_5.onnx \
       && wget -q ${A}/models-3.0.0/fan_68_5.hash
@@ -115,12 +114,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     FACEFUSION_PORT=7860 \
     FACEFUSION_LISTEN=127.0.0.1
 
-# OS packages. Python 3.12, not 3.11: FaceFusion 3.9.2 pins scipy==1.18.1,
-# which requires Python >=3.12. FaceFusion's own pre_check wants curl on PATH
-# (ffmpeg and ffprobe come from the BtbN build below, unpacked with xz);
-# libGL and glib for OpenCV. openssh-server is the only way into the pod; its
-# host keys are deleted here so every pod generates its own at boot instead of
-# sharing baked ones. get-pip provides pip.
+# Python 3.12: FaceFusion 3.9.2 pins scipy==1.18.1, which requires >=3.12.
+# curl for FaceFusion's pre_check, xz for the FFmpeg archive below, libGL and
+# glib for OpenCV. openssh-server is the only way into the pod; host keys are
+# deleted so every pod generates its own at boot.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         software-properties-common gnupg \
     && add-apt-repository -y ppa:deadsnakes/ppa \
@@ -135,16 +132,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12 \
     && rm -rf /var/lib/apt/lists/*
 
-# FFmpeg 8.1. Ubuntu 22.04's apt ffmpeg is 4.4, which rejects `-fps_mode`
-# (added in 5.1); FaceFusion 3.9.2 passes it to every frame reader, so on 4.4
-# each read returns nothing, the preview stays empty and every output frame is
-# a black placeholder. The HDR tone-map it applies to HLG/PQ sources needs a
-# modern build too. The check runs FaceFusion's reader command shape on a test
-# source. BtbN's linux64-gpl build loads NVIDIA's encoder from the driver at
-# runtime, so a job can encode on the GPU (h264_nvenc, hevc_nvenc) instead of
-# with libx264 on the CPU. 8.1, not 9.0: BtbN's 9.0 build asks for NVENC API
-# 13.1 (driver >=610), newer than many RunPod hosts run. BtbN removes dated
-# builds after a while: a failed download here means picking a current
+# FFmpeg 8.1. Ubuntu 22.04's ffmpeg 4.4 lacks `-fps_mode` (5.1+), which
+# FaceFusion 3.9.2 passes to every frame reader: on 4.4 every read is empty,
+# the preview stays blank and every output frame is a black placeholder. Its
+# HDR tone-map for HLG/PQ sources also needs a modern build. The check runs
+# FaceFusion's reader command shape on a test source. BtbN's linux64-gpl build
+# loads NVENC from the driver at runtime (h264_nvenc, hevc_nvenc). Not 9.0:
+# BtbN's 9.0 build needs NVENC API 13.1 (driver >=610), newer than many RunPod
+# hosts run. BtbN prunes dated builds: if the download fails, take a current
 # autobuild and its sha256 from the release's checksums.sha256.
 ARG FFMPEG_BUILD=autobuild-2026-11-07-12-47
 ARG FFMPEG_ARCHIVE=ffmpeg-n8.1.3-34-ga35157abb9-linux64-gpl-8.1
@@ -162,10 +157,9 @@ RUN test "$(ffmpeg -loglevel error -f lavfi -i testsrc2=size=64x64:rate=5 -t 1 \
     && ffmpeg -hide_banner -encoders | grep -q ' hevc_nvenc ' \
     && ffmpeg -version | head -1
 
-# cloudflared connects the pod out to a Cloudflare Tunnel; pod.sh start runs it
-# over SSH with the token from the starting machine (pod-kit/lib/common.sh,
-# rp_cloudflare_up). Optional: unused without a tunnel name in pod.env. Pinned
-# and checksummed.
+# cloudflared, optional (unused without a tunnel name in pod.env): pod.sh start
+# runs it over SSH with the token from the starting machine
+# (pod-kit/lib/common.sh, rp_cloudflare_up).
 ARG CLOUDFLARED_VERSION=2026.10.3
 ARG CLOUDFLARED_SHA256=053b80b0a23031a038fdbf3c073f59f82b8f1f152aa67971d7383ffafc0dbab0
 RUN curl -fsSL -o /usr/local/bin/cloudflared \
@@ -184,15 +178,13 @@ RUN git clone --depth 1 --branch "${FACEFUSION_VERSION}" \
 WORKDIR /workspace/facefusion
 RUN grep -q "'version': '${FACEFUSION_VERSION}'" facefusion/metadata.py
 
-# Dependencies, installed explicitly rather than through FaceFusion's
-# install.py. install.py looks for a `pip` executable (get-pip installs pip3
-# and the module, not a `pip` shim) and ignores pip's exit code, so a failed
-# install still exits 0 and ships an image that crash-loops at pod start.
+# Not through FaceFusion's install.py: it looks for a `pip` executable (get-pip
+# installs pip3, no `pip` shim) and ignores pip's exit code, so a failed
+# install would ship an image that crash-loops at pod start.
 #
-# These are 3.9.2's requirements.txt verbatim except onnxruntime, swapped for
-# the CUDA 13 GPU wheel (installer.py's cuda@13 pin). FaceFusion treats
-# onnxruntime 1.25.1-1.29 on CUDA as leaking the memory arena
-# (inference_manager.py); 1.31.0 is outside that range.
+# 3.9.2's requirements.txt verbatim except onnxruntime, swapped for the CUDA 13
+# GPU wheel (installer.py's cuda@13 pin). FaceFusion treats onnxruntime
+# 1.25.1-1.29 on CUDA as leaking the memory arena (inference_manager.py).
 RUN python3 -m pip install \
         gradio-rangeslider==0.0.8 \
         gradio==5.50.0 \
@@ -203,8 +195,8 @@ RUN python3 -m pip install \
         scipy==1.18.1 \
         onnxruntime-gpu==1.31.0
 
-# Fail the build now if the ONNX/CUDA stack is incoherent, rather than at pod
-# start on a billed GPU: the CUDA provider is registered (the GPU wheel
+# Fail the build, not a billed pod, if the ONNX/CUDA stack is incoherent: the
+# CUDA provider is registered (the GPU wheel
 # registers it even without a GPU at build time), onnxruntime-gpu is the only
 # onnxruntime package (a CPU wheel next to it shadows the CUDA build), and the
 # version is outside the leaking range.
@@ -246,9 +238,7 @@ COPY --link --from=models /models/.assets/models/nsfw_1.onnx /models/.assets/mod
 COPY --link --from=models /models/.assets/models/nsfw_2.onnx /models/.assets/models/nsfw_2.hash /workspace/facefusion/.assets/models/
 COPY --link --from=models /models/.assets/models/nsfw_3.onnx /models/.assets/models/nsfw_3.hash /workspace/facefusion/.assets/models/
 
-# Verify the bake: every expected model (.onnx + .hash) is present and
-# non-empty, failing the build if a download silently produced a short or HTML
-# file.
+# Every expected model (.onnx + .hash) is present and non-empty.
 RUN set -eu; \
     cd /workspace/facefusion/.assets/models; \
     for m in hyperswap_1a_256 hyperswap_1b_256 hyperswap_1c_256 \

@@ -1,25 +1,21 @@
-// ComfyUI sends each upload as one multipart POST to /upload/image. Over the SSH tunnel a large
-// video takes minutes, a dropped tunnel restarts it from zero and nothing shows how far it got;
-// through Cloudflare a request over 100 MB is refused. Every upload is sent here instead, in
-// chunks to /media_library/upload, resumed from the server's offset after a drop, with a progress
-// panel in the bottom-left corner, then committed where /upload/image would have put it. The
-// node that asked gets the answer /upload/image gives.
+// ComfyUI sends each upload as one multipart POST to /upload/image: over the SSH tunnel a dropped
+// connection restarts a large video from zero, and Cloudflare refuses a request over 100 MB.
+// This sends uploads in chunks to /media_library/upload, resumes from the server's offset after
+// a drop, shows progress in a bottom-left panel, then commits the file where /upload/image would
+// have put it and answers the calling node the way /upload/image does.
 (() => {
 	const native_fetch = window.fetch.bind(window);
 	const comfy_upload_pattern = /\/upload\/image$/;
 	const chunk_size_min = 256 * 1024;
-	// 32 MB keeps each chunk under Cloudflare's per-request edge window on a slow uplink,
-	// so a chunk is not cut mid-flight while the connection is busy; the chunk is still
-	// auto-sized to chunk_seconds, this is only the ceiling a fast link is capped at
+	// ceiling for a fast link: keeps a chunk inside Cloudflare's per-request edge window on a slow
+	// uplink, so it is not cut mid-flight
 	const chunk_size_max = 32 * 1024 * 1024;
-	// size each chunk to take about this long, so a drop loses little and a fast link is not
-	// slowed down by one request per small chunk
+	// target time per chunk: a drop loses little, and a fast link is not held back by many small requests
 	const chunk_seconds = 4;
 	const retry_delay_max = 15000;
 	const retry_attempts_max = 40;
-	// files go one at a time per lane: photos, and videos and anything else, each have their own,
-	// so a photo never waits behind a multi-GB video
 	const sample_size = 1024 * 1024;
+	// one file at a time per lane, so a photo never waits behind a multi-GB video
 	const queues = { image: Promise.resolve(), other: Promise.resolve() };
 	const done_color = '#27ae60';
 	const failed_color = '#c0392b';
@@ -41,8 +37,7 @@
 		'.upload-status.is-expanded .upload-status-list{max-height:60vh;overflow-y:auto}';
 	let panel = null;
 
-	// the same file dropped again maps to the same upload: the key comes from the name, the size
-	// and sampled bytes
+	// name, size and sampled head/tail bytes, so the same file dropped again maps to the same upload
 	const create_key = async (file) => {
 		const head = new Uint8Array(await file.slice(0, sample_size).arrayBuffer());
 		const tail = new Uint8Array(await file.slice(Math.max(0, file.size - sample_size)).arrayBuffer());
@@ -84,8 +79,6 @@
 
 	const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-	// floating in the bottom-left corner while files go up, collapsed to a few rows with an
-	// arrow that shows every upload
 	const get_panel = () => {
 		if (!panel) {
 			const style = document.createElement('style');
@@ -122,8 +115,8 @@
 		panel.classList.toggle('is-idle', !rows.length);
 	};
 
-	// one row per file. its x cancels: the request in flight is aborted, a queued file is
-	// skipped, and on_cancel discards what already reached the server
+	// one row per file. x aborts the request in flight, skips a queued file, and on_cancel
+	// discards what already reached the server
 	const create_row = (name, size, on_cancel) => {
 		const row = document.createElement('div');
 		row.className = 'upload-status-row';
@@ -298,8 +291,7 @@
 		}
 	};
 
-	// the finished file goes where /upload/image would have put it: the same form fields, minus
-	// the file itself
+	// sends the form fields /upload/image reads for placement, without the file
 	const commit_file = async (base_url, row, query, form) => {
 		for (let attempt = 1; ; attempt++) {
 			const fields = new FormData();
@@ -317,9 +309,8 @@
 		}
 	};
 
-	// one upload the page meant for /upload/image: sent in chunks, then committed. resolves to
-	// the status and body /upload/image would have answered, or to { unsupported: true } when
-	// the pod has no chunked upload route, so the caller sends it the old way
+	// resolves to the status and body /upload/image would have answered, or to
+	// { unsupported: true } when the pod has no chunked upload route and the caller falls back
 	const run_upload = (url, form, on_fraction) => {
 		const file = form.get('image');
 		const base_url = url.origin + url.pathname.replace(comfy_upload_pattern, '');
@@ -357,8 +348,8 @@
 
 	const to_url = (input) => new URL(typeof input === 'string' || input instanceof URL ? input : input.url, window.location.href);
 
-	// uploads a reload interrupted stay on the server as partial files: list them, with an x to
-	// discard and a note that dropping the same file again continues it
+	// uploads a reload interrupted stay on the server as partial files; each is listed with an x
+	// to discard it
 	const unfinished_rows = {};
 
 	const show_unfinished = async () => {
@@ -390,9 +381,9 @@
 		return native_fetch(input, init);
 	};
 
-	// VideoHelperSuite's Load Video uploads with XMLHttpRequest, for its progress bar: the
-	// request is answered here once the file is committed, with its progress events from the
-	// chunks, and the status and responseText /upload/image would have given
+	// VideoHelperSuite's Load Video uploads with XMLHttpRequest for its progress bar: progress
+	// events come from the chunks, and once committed the request gets the status and
+	// responseText /upload/image would have given
 	const native_open = XMLHttpRequest.prototype.open;
 	const native_send = XMLHttpRequest.prototype.send;
 

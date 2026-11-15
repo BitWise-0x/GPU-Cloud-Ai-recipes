@@ -12,8 +12,8 @@ NODE_CLASS_MAPPINGS = {}
 
 
 def get_parts_directory() -> str:
-    # in ComfyUI's user directory, which git ignores, not in input/, so a node that lists its
-    # files never sees a part
+    # under the git-ignored user directory, outside input/, so a node listing input files
+    # never sees a part
     return os.path.join(folder_paths.get_user_directory(), '.upload_parts')
 
 

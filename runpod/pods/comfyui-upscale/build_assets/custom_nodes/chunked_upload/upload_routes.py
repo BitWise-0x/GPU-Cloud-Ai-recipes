@@ -1,11 +1,9 @@
 # Resumable chunked uploads for ComfyUI, the server half of web/chunked_upload.js.
 #
-# ComfyUI takes an upload as one multipart POST to /upload/image. Through the SSH
-# tunnel a large video takes minutes and a dropped tunnel restarts it from zero;
-# through Cloudflare a request over 100 MB is refused. The browser sends every
-# upload here instead, in chunks, resumed from the server's offset after a drop,
-# then commits the finished file into ComfyUI's input, temp or output directory
-# with ComfyUI's own naming, and answers what /upload/image answers.
+# ComfyUI's /upload/image takes one multipart POST: a dropped SSH tunnel restarts
+# it from zero and Cloudflare refuses a request over 100 MB. These routes take the
+# file in chunks, resumable from the server's offset, then commit it into ComfyUI's
+# input, temp or output directory with ComfyUI's naming and answer as /upload/image does.
 import asyncio
 import filecmp
 import glob
@@ -104,10 +102,9 @@ def is_complete(parts_directory: str, upload_key: str, size: int) -> bool:
 
 
 def resolve_commit_path(source_path: str, directory: str, file_name: str, overwrite: bool) -> Tuple[str, bool]:
-    # ComfyUI's naming: overwrite takes the name as it is; otherwise a file with the same
-    # name and the same bytes is the same upload (kept, not written twice) and a different
-    # one gets "name (1).ext", "name (2).ext". Returns the path and whether it already holds
-    # these bytes
+    # ComfyUI's naming: overwrite keeps the name; otherwise an existing file with the same
+    # bytes is reused and a different one gets "name (1).ext", "name (2).ext". Returns the
+    # path and whether it already holds these bytes
     file_path = os.path.join(directory, file_name)
     base_name, extension = os.path.splitext(file_name)
     index = 1
@@ -124,7 +121,7 @@ def resolve_commit_path(source_path: str, directory: str, file_name: str, overwr
 
 def commit_upload(parts_directory: str, upload_key: str, file_name: str, directory: str, overwrite: bool) -> str:
     # the finished part moves into place; a file committed before is linked (or copied) from
-    # where it went, so the same bytes are never sent twice
+    # its earlier location, so the same bytes are never sent twice
     part_path = get_part_path(parts_directory, upload_key)
     completed_path = get_completed_path(parts_directory, upload_key)
     source_path = part_path if os.path.isfile(part_path) else completed_path
@@ -196,8 +193,7 @@ def create_routes(get_parts_directory: Callable[[], str], resolve_directory: Res
     async def get_partials(request: web.Request) -> web.Response:
         return web.json_response({ 'partials': list_partial_uploads(get_parts_directory()) })
 
-    # discarding an upload the browser cancelled, or one a reload left unfinished; the chunk
-    # the browser just aborted holds the lock for a moment, so the discard waits for it
+    # a chunk the browser just aborted holds the lock for a moment, so a discard waits for it
     @routes.delete('/media_library/upload/{upload_key}')
     async def delete_upload(request: web.Request) -> web.Response:
         upload_key = request.match_info['upload_key']
@@ -230,8 +226,8 @@ def create_routes(get_parts_directory: Callable[[], str], resolve_directory: Res
             return web.json_response({ 'done': True })
         upload_lock = UPLOAD_LOCKS.setdefault(upload_key, asyncio.Lock())
 
-        # a second tab sending the same file would interleave its chunks into the part file;
-        # it backs off and retries instead
+        # a second tab sending the same file would interleave its chunks into the part file, so
+        # it gets 429 and retries
         if upload_lock.locked():
             return web.json_response({ 'offset': get_part_size(parts_directory, upload_key) }, status=429)
         async with upload_lock:
@@ -260,8 +256,7 @@ def create_routes(get_parts_directory: Callable[[], str], resolve_directory: Res
                 return web.json_response({ 'done': True })
             return web.json_response({ 'offset': current_offset })
 
-    # a finished upload goes where /upload/image would have put it, and the answer is the one
-    # /upload/image gives, so the node that asked for the file takes it as its own upload
+    # same destination and response body as /upload/image, so the requesting node treats it as its own upload
     @routes.post('/media_library/commit/{upload_key}')
     async def commit(request: web.Request) -> web.Response:
         parts_directory = get_parts_directory()

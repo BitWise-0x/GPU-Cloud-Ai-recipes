@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
 """Build-time guard for the Dockerfile's torch CUDA-layer split.
 
-The CUDA wheels (nvidia-*, cuda-toolkit, cuda-bindings) + triton are
-pip-installed in their own RUN layers *before* torch, so torch's own layer
-stays lean (just its .so files, not the multi-GB CUDA libs). That only holds if
-every CUDA dep torch declares is already satisfied by what was pre-installed;
-otherwise torch pulls a second copy into its layer and the split is defeated.
+The CUDA wheels (nvidia-*, cuda-toolkit, cuda-bindings) and triton install in
+their own RUN layers before torch, so torch's layer holds only its own .so
+files. That holds only while every CUDA dep torch declares is already satisfied;
+otherwise torch pulls a second copy into its layer.
 
 torch 2.14+ declares most CUDA libs through `cuda-toolkit[<extras>]==X`, whose
-extras pin the individual nvidia-* wheels, so this walks torch's Requires-Dist
-AND the requested cuda-toolkit extras, and checks each requirement's specifier
-(==, ==X.*, ~=, ranges) against the installed version, then imports torch.
-Scoped to torch's own CUDA deps on purpose: a plain `pip check` also fails on
-unrelated OS base-image packages (e.g. pygobject missing pycairo) that we don't
-control. Uses pip's vendored `packaging`, since pip is always present here.
+extras pin the nvidia-* wheels, so this walks torch's Requires-Dist and those
+extras, checks each specifier against the installed version, then imports torch.
+It checks only torch's CUDA deps: `pip check` also fails on base-image packages
+outside this build's control (pygobject missing pycairo). `packaging` comes from
+pip's vendored copy.
 
-Exit non-zero (failing the build) on any mismatch or import failure.
+Exits non-zero, failing the build, on any mismatch or import failure.
 """
 import importlib.metadata as md
 import sys
@@ -26,7 +24,7 @@ CUDA_PREFIXES = ("nvidia-", "triton", "cuda-")
 
 
 def deps_of(dist, extras=()):
-    """(requirement, extras-it-asks-for) for `dist`'s Requires-Dist under `extras`."""
+    """`dist`'s Requires-Dist entries whose markers match one of `extras`."""
     out = []
     for raw in md.metadata(dist).get_all("Requires-Dist") or []:
         req = Requirement(raw)
@@ -67,6 +65,6 @@ if mismatches:
           file=sys.stderr)
     sys.exit(1)
 
-import torch  # noqa: E402  (import after the cheap metadata check)
+import torch  # noqa: E402  (after the cheap metadata check)
 print(f"torch CUDA deps OK: {checked} requirements satisfied single-copy; "
       f"torch {torch.__version__} imports OK")
