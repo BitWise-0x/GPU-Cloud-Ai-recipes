@@ -17,14 +17,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/facefusion/facefusion">FaceFusion</a>, upstream and unmodified, on a RunPod GPU pod.<br>
+  <a href="https://github.com/facefusion/facefusion">FaceFusion</a> 3.9.2 on a RunPod GPU pod.<br>
   The face models are baked into the image, so the first job starts without downloads.
 </p>
 
 > **Use it responsibly.** FaceFusion is a face swapper. Use it only on faces
 > you have consent to use, and follow FaceFusion's OpenRAIL-AS license, whose
-> use restrictions apply to your image. Upstream's content analyser stays on,
-> and its models are baked in with the rest.
+> use restrictions apply to your image. FaceFusion's content analyser is
+> active, and its models are baked in with the rest.
 
 ---
 
@@ -97,7 +97,7 @@ and the lists interact with RunPod's placement.
 
 ## Uploads
 
-Upstream's Gradio UI sends each upload as one request.
+FaceFusion's Gradio UI sends each upload as one request.
 
 | Path | Works at any size | Survives a dropped connection |
 |---|---|---|

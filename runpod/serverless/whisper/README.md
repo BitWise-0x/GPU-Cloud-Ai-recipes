@@ -48,8 +48,7 @@ python3 ../deploy/runpod_deploy.py run endpoint.json test_input.json
 
 ## Why This Worker
 
-The worker is a small example on purpose. The parts worth copying into your
-own worker:
+The parts of this worker that carry over to any serverless worker:
 
 <table>
 <tr>
@@ -247,4 +246,4 @@ docker run --gpus all -p 8000:8000 <image> \
 | Image build | built, with the decode and model-load checks passing |
 | Handler on a GPU | run on an L4 through the SDK's `--test_input` mode: model loaded in about 2 s, the sample clip transcribed correctly with word timestamps in about 1.3 s |
 | `runpod_deploy.py apply` | created a template |
-| Endpoint, `pin`, `run` | untested: the test account had no serverless worker quota left |
+| Endpoint, `pin`, `run` | not yet run |

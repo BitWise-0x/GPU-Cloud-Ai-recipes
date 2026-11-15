@@ -90,7 +90,7 @@ the `auto-h264-mp4` format the workflows use.
 
 | Component | Version / detail |
 |---|---|
-| **ComfyUI** | v0.45.2, upstream, core nodes only plus VideoHelperSuite 1.7.9 |
+| **ComfyUI** | v0.45.2, core nodes plus VideoHelperSuite 1.7.9 |
 | **torch** | 2.14.1 + CUDA 13.0 (cu130), Python 3.12 |
 | **Upscale models** (baked, sha256-checked) | 2xLiveActionV1_SPAN, 2xVHS2HD-RealPLKSR, 1xDeH264_realplksr, RealESRGAN x2plus / x4plus, realesr-general-x4v3, RIFE 4.26 (frame interpolation) |
 | **SeedVR2** | downloaded at boot (3B fp16 by default, sha256-checked); `COMFYUI_SEEDVR2_MODEL` picks another or `none` |

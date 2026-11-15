@@ -113,7 +113,7 @@ Cloudflare Tunnel:
 Cloudflare caps one request at 100 MB on the Free and Pro plans. An app that
 uploads a large file in one request gets an error above that. The ComfyUI
 recipe sends uploads in resumable chunks under that cap (`chunked_upload`).
-Upstream FaceFusion sends each upload in one request, so for large files use
+FaceFusion sends each upload in one request, so for large files use
 `scp` or the SSH tunnel.
 
 <br>

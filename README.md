@@ -45,7 +45,7 @@ Prerequisites, secrets and the full pod session: [`runpod/README.md`](runpod/REA
 | Recipe | Kind | What it runs | Models | Tested on |
 |---|---|---|---|---|
 | [`comfyui-upscale`](runpod/pods/comfyui-upscale/) | Pod | ComfyUI v0.45.2 with two video upscale workflows: per-frame models and SeedVR2 diffusion restore | SPAN, RealPLKSR, Real-ESRGAN, RIFE (baked); SeedVR2 3B (fetched at boot) | L40S |
-| [`facefusion`](runpod/pods/facefusion/) | Pod | FaceFusion 3.9.2, upstream and unmodified, content analyser on | swappers, detectors, masks, enhancers (baked) | RTX PRO 6000 |
+| [`facefusion`](runpod/pods/facefusion/) | Pod | FaceFusion 3.9.2 with its content analyser | swappers, detectors, masks, enhancers (baked) | RTX PRO 6000 |
 | [`whisper`](runpod/serverless/whisper/) | Serverless | scale-to-zero speech to text: audio URL in, text and timed segments out | faster-whisper large-v3 (baked) | L4 |
 
 The repo ships Dockerfiles only, never built images. You build each image into
@@ -115,7 +115,7 @@ control.
 <img src="https://img.shields.io/badge/Python-stdlib_only-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"/>
 
 - **Endpoints from a JSON spec**: `runpod_deploy.py apply | pin | status | run`, standard library only.
-- **Digest pinning from CI**, so a push actually rolls the workers instead of resolving a stale tag.
+- **Digest pinning from CI**, so every push rolls the workers: RunPod does not re-pull a tag.
 - **A worker built the way a production one should be**: model loaded at import, input validated at the edge, out-of-memory errors replace the worker.
 
 </td>
