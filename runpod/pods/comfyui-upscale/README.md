@@ -118,7 +118,7 @@ documents every value):
 
 | Variable | Example value | Purpose |
 |---|---|---|
-| `RUNPOD_IMAGE` | `ghcr.io/your-user/gpu-cloud-recipes/comfyui-upscale:v1` | the image you built |
+| `RUNPOD_IMAGE` | `ghcr.io/your-user/gpu-cloud-ai-recipes/comfyui-upscale:v1` | the image you built |
 | `RUNPOD_POD_NAME`, `RUNPOD_TEMPLATE_NAME` | `comfyui-upscale-pod` | pod and template name in your account |
 | `POD_APP_PORT` | `8188` | ComfyUI's port inside the pod |
 | `RUNPOD_TUNNEL_PORT` | `18288` | the local end of the SSH tunnel |

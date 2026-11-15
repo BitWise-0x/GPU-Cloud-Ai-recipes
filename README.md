@@ -5,13 +5,13 @@
   <img src="https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Cloudflare"/>
   <br>
   <br>
-  <code><strong>GPU-cloud-recipes</strong></code>
+  <code><strong>GPU-Cloud-Ai-recipes</strong></code>
 </h1>
 
 <p align="center">
-  <img src="https://img.shields.io/github/license/BitWise-0x/GPU-cloud-recipes?style=flat-square&color=blue" alt="License"/>
-  <img src="https://img.shields.io/github/last-commit/BitWise-0x/GPU-cloud-recipes?style=flat-square&color=green" alt="Last Commit"/>
-  <img src="https://github.com/BitWise-0x/GPU-cloud-recipes/actions/workflows/ci.yml/badge.svg" alt="CI"/>
+  <img src="https://img.shields.io/github/license/BitWise-0x/GPU-Cloud-Ai-recipes?style=flat-square&color=blue" alt="License"/>
+  <img src="https://img.shields.io/github/last-commit/BitWise-0x/GPU-Cloud-Ai-recipes?style=flat-square&color=green" alt="Last Commit"/>
+  <img src="https://github.com/BitWise-0x/GPU-Cloud-Ai-recipes/actions/workflows/ci.yml/badge.svg" alt="CI"/>
   <img src="https://img.shields.io/badge/platform-linux%2Famd64-555?style=flat-square&logo=linux&logoColor=white" alt="linux/amd64"/>
 </p>
 
@@ -26,9 +26,11 @@
 ## Quick Start
 
 ```bash
-git clone https://github.com/BitWise-0x/GPU-cloud-recipes && cd GPU-cloud-recipes/runpod/pods/comfyui-upscale
+git clone https://github.com/BitWise-0x/GPU-Cloud-Ai-recipes
+cd GPU-Cloud-Ai-recipes/runpod/pods/comfyui-upscale
 cp pod.env.example pod.env          # point RUNPOD_IMAGE at your registry
-../../pod-kit/build.sh .            # or: gh workflow run build-image.yml -f recipe=comfyui-upscale -f tag=v1
+../../pod-kit/build.sh .            # build for linux/amd64 and push, or on GitHub Actions:
+# gh workflow run build-image.yml -f recipe=comfyui-upscale -f tag=v1
 ../../pod-kit/pod.sh . setup        # registry auth + RunPod template
 ../../pod-kit/pod.sh . start        # place a pod, open the tunnel
 ../../pod-kit/pod.sh . stop         # billing stops
@@ -135,7 +137,7 @@ graph LR
         gha["<b>build-image</b> workflow<br>or <code>build.sh</code>"]
     end
 
-    reg["<b>Your registry</b><br>ghcr.io/&lt;owner&gt;/gpu-cloud-recipes/&lt;recipe&gt;"]
+    reg["<b>Your registry</b><br>ghcr.io/&lt;owner&gt;/gpu-cloud-ai-recipes/&lt;recipe&gt;"]
 
     subgraph RunPod
         tpl["<b>Template</b><br>image, disk, env"]

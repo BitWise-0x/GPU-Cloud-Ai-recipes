@@ -74,7 +74,7 @@ API="https://api.runpod.io/v2"
 }
 # Machines that started or never started a pod, shared by every recipe: a stuck
 # machine is stuck whatever the image.
-HOSTS_FILE="${RUNPOD_HOSTS_FILE:-${XDG_CACHE_HOME:-${HOME}/.cache}/gpu-cloud-recipes/runpod-hosts}"
+HOSTS_FILE="${RUNPOD_HOSTS_FILE:-${XDG_CACHE_HOME:-${HOME}/.cache}/gpu-cloud-ai-recipes/runpod-hosts}"
 
 # ---- terminal output --------------------------------------------------------
 # Colour only when the stream is a terminal and NO_COLOR is unset, so CI logs

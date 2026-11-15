@@ -155,7 +155,7 @@ and it bills. The kit watches the pod's system log while it waits. If the log
 shows no new line for `RUNPOD_BOOT_IDLE_TIMEOUT` seconds, or the container has
 not started after `RUNPOD_BOOT_TIMEOUT`, the kit:
 
-1. records the machine in `~/.cache/gpu-cloud-recipes/runpod-hosts`,
+1. records the machine in `~/.cache/gpu-cloud-ai-recipes/runpod-hosts`,
 2. terminates the pod,
 3. places a new one, up to `RUNPOD_BOOT_RETRIES` times.
 

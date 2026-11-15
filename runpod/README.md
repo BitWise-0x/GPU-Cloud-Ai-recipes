@@ -67,7 +67,8 @@ never as an argument a process listing would show.
 ```bash
 cd runpod/pods/<recipe>
 cp pod.env.example pod.env      # edit RUNPOD_IMAGE, GPU lists, ports
-../../pod-kit/build.sh .        # build and push a new tag (or: gh workflow run build-image.yml -f recipe=<recipe> -f tag=v2)
+../../pod-kit/build.sh .        # build and push a new tag, or on GitHub Actions:
+# gh workflow run build-image.yml -f recipe=<recipe> -f tag=v2
 ../../pod-kit/pod.sh . setup    # registry auth + template (re-run after an image change)
 ../../pod-kit/pod.sh . start    # or: start <list>, e.g. start video
 ../../pod-kit/pod.sh . status

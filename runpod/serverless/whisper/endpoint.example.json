@@ -1,7 +1,7 @@
 {
   "template": {
     "name": "whisper-worker",
-    "image": "ghcr.io/your-user/gpu-cloud-recipes/whisper-worker:v1",
+    "image": "ghcr.io/your-user/gpu-cloud-ai-recipes/whisper-worker:v1",
     "disk": 20,
     "registryName": null,
     "env": {

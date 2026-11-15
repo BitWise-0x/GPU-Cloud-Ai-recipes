@@ -29,7 +29,7 @@ cd runpod/serverless/whisper
 
 # 1. build and push (linux/amd64; on an ARM Mac this emulates and is slow)
 docker buildx build --platform linux/amd64 --provenance=false \
-  -t ghcr.io/your-user/gpu-cloud-recipes/whisper-worker:v1 --push .
+  -t ghcr.io/your-user/gpu-cloud-ai-recipes/whisper-worker:v1 --push .
 
 # 2. spec: copy and set the image (and registryName for a private image)
 cp endpoint.example.json endpoint.json
@@ -165,7 +165,7 @@ RunPod console (Settings > Container Registry Auth).
 
 | Spec field | Example | Meaning |
 |---|---|---|
-| `template.image` | `ghcr.io/your-user/gpu-cloud-recipes/whisper-worker:v1` | what workers run (later pinned by digest) |
+| `template.image` | `ghcr.io/your-user/gpu-cloud-ai-recipes/whisper-worker:v1` | what workers run (later pinned by digest) |
 | `template.disk` | `20` | container disk, GB |
 | `endpoint.workers` | `{"min": 0, "max": 2}` | scale to zero, at most two workers |
 | `endpoint.scaling` | `REQUEST_COUNT`, `1` | one worker per queued job |
