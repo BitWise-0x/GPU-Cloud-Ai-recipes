@@ -3,6 +3,60 @@
 What decides which card a pod lands on, and how the pod kit's lists and filters
 work around RunPod's placement.
 
+<br>
+
+---
+
+## The walk at a glance
+
+```mermaid
+graph TD
+    start(["pod.sh start [list]"])
+    walk["<b>Walk</b><br>each GPU in the list, left to right:<br>preferred countries, then every data center<br>(if RUNPOD_COUNTRY_FALLBACK=1)"]
+    ok{"a pod placed?"}
+    floor{"vCPU floor<br>still on?"}
+    fwalks{"floor walks<br>used up?"}
+    strict{"RUNPOD_MIN_VCPU_STRICT"}
+    drop["drop the floor"]
+    retries{"retries<br>left?"}
+    wait["wait RUNPOD_ALLOC_RETRY_DELAY"]
+    giveup(["give up, say why"])
+    boot["<b>Boot watch</b><br>image pull progress"]
+    stuck{"container<br>started?"}
+    replace["terminate, record the machine,<br>place again (RUNPOD_BOOT_RETRIES)"]
+    up(["app answers through the tunnel"])
+
+    start --> walk --> ok
+    ok -->|"yes"| boot --> stuck
+    stuck -->|"yes"| up
+    stuck -->|"no"| replace --> walk
+    ok -->|"no"| floor
+    floor -->|"yes"| fwalks
+    fwalks -->|"no"| wait
+    fwalks -->|"yes"| strict
+    strict -->|"1"| giveup
+    strict -->|"0"| drop --> walk
+    floor -->|"no"| retries
+    retries -->|"yes"| wait --> walk
+    retries -->|"no"| giveup
+```
+
+| Knob | Default in the kit | Effect |
+|---|---|---|
+| `RUNPOD_GPU_TYPES` (`_<LIST>` for `start <list>`) | per recipe | the cards to try, in order |
+| `RUNPOD_MIN_VCPU_PER_GPU` (`_<LIST>`) | per recipe | vCPU floor per GPU for the first walks |
+| `RUNPOD_MIN_VCPU_WALKS` | `9` | walks with the floor before it is dropped or start gives up |
+| `RUNPOD_MIN_VCPU_STRICT` | per recipe | `1` gives up, `0` drops the floor |
+| `RUNPOD_ALLOC_RETRIES`, `RUNPOD_ALLOC_RETRY_DELAY` | `6`, `20` s | walks without a floor, and the wait between walks |
+| `RUNPOD_ALLOWED_CUDA_VERSIONS` | per recipe | exact CUDA versions a host may report |
+| `RUNPOD_COUNTRY_CODES`, `RUNPOD_COUNTRY_FALLBACK` | per recipe | preferred countries, then everywhere |
+| `RUNPOD_BOOT_IDLE_TIMEOUT`, `RUNPOD_BOOT_TIMEOUT`, `RUNPOD_BOOT_RETRIES` | `240` s, `900` s, `2` | when a machine counts as stuck, and how many to replace |
+| `RUNPOD_CLOUD_TYPE` | `SECURE` | Secure or Community cloud |
+
+<br>
+
+---
+
 ## Order the list by what the job needs, not by price alone
 
 `pod.sh start` walks `RUNPOD_GPU_TYPES` left to right and takes the first card
@@ -22,6 +76,10 @@ with capacity. Each recipe orders its list by what its work needs:
   often sold out.
 
 The exact GPU names come from `GET https://api.runpod.io/v2/catalog/gpus`.
+
+<br>
+
+---
 
 ## The same GPU type comes with different CPUs
 
@@ -51,6 +109,10 @@ miss so you can tell which.
 `docs/images.md` covers how an image should size its thread pools to the
 quota, not to the host.
 
+<br>
+
+---
+
 ## CUDA versions
 
 `RUNPOD_ALLOWED_CUDA_VERSIONS` keeps pods off hosts whose driver cannot run the
@@ -66,6 +128,10 @@ to match the hosts you want, not the newest release.
 
 Serverless endpoints are different: see `docs/serverless.md`.
 
+<br>
+
+---
+
 ## Data centers and the fallback
 
 `RUNPOD_COUNTRY_CODES` (for example `US,CA`) limits pods to data centers whose
@@ -76,6 +142,10 @@ free host abroad is taken in the same walk instead of after every walk at home
 has come up empty. Pick the countries for latency to you. Pods are reached
 over SSH or a Cloudflare edge near you, so a distant pod costs latency, not
 features.
+
+<br>
+
+---
 
 ## Machines that never start
 
@@ -94,19 +164,29 @@ places that GPU type outside the stuck machine's data center, and releases at
 once any pod that still lands on it. The machine id comes from the SSH proxy
 user name (`<pod id>-<machine id>`), the only place the v2 API exposes it.
 
+<br>
+
+---
+
 ## Secure and Community cloud
 
-`RUNPOD_CLOUD_TYPE=SECURE` places pods in RunPod's own data centers.
-`COMMUNITY` is cheaper and runs on third-party hosts. A Community pod can be
-interrupted, and its network is less predictable. Use Secure for work you are
-watching, and Community when a restart costs you little.
+| `RUNPOD_CLOUD_TYPE` | Hosts | Price | Use for |
+|---|---|---|---|
+| `SECURE` (default) | RunPod's own data centers | higher | work you are watching |
+| `COMMUNITY` | third-party hosts; can be interrupted, network less predictable | lower | work where a restart costs you little |
+
+<br>
+
+---
 
 ## Pause and stop
 
-`pause` stops the pod but keeps its machine. GPU billing stops, and the next
-`start` resumes on the same machine with the image already cached, which saves
-the cold pull. The container disk is wiped either way. A paused pod still bills
-for its disk until `stop` terminates it. If the machine's GPU has been taken by
-then, `start` terminates the paused pod and places a new one.
+| | `pause` | `stop` |
+|---|---|---|
+| **GPU billing** | stops | stops |
+| **Disk billing** | continues until `stop` | stops |
+| **Machine** | kept: the next `start` resumes on it with the image cached, saving the cold pull | released |
+| **Container disk** | wiped | wiped |
+| **If the GPU was taken meanwhile** | `start` terminates the paused pod and places a new one | n/a |
 
 Nothing in the kit stops a pod for you. Run `stop` when you are done.

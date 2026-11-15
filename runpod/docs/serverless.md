@@ -5,6 +5,10 @@ worker in `serverless/whisper/` and the script in `serverless/deploy/` follow
 these rules. Everything here uses the management API v2
 (`https://api.runpod.io/v2`, OpenAPI at `/v2/openapi.json`).
 
+<br>
+
+---
+
 ## Pod or serverless
 
 | | Pod (`pods/`) | Serverless (`serverless/`) |
@@ -14,7 +18,28 @@ these rules. Everything here uses the management API v2
 | State | one container disk for the session | none between jobs; each job brings its inputs |
 | Start | you start and stop it | RunPod starts workers on demand |
 
+<br>
+
+---
+
 ## Templates and endpoints
+
+```mermaid
+graph LR
+    tpl["<b>Template</b><br>image, disk, registry, env"]
+    ep["<b>Endpoint</b><br>its own copy of<br>image, disk, registry, env"]
+    rel["<b>Release n+1</b><br>field-level diff"]
+    old["workers on release n<br><i>isStale: true</i><br>keep serving"]
+    new["new workers<br>on release n+1"]
+    as["<b>Autoscaler</b>"]
+
+    tpl -->|"copied once,<br>at endpoint create"| ep
+    tpl -.->|"later template edits<br>never reach it"| ep
+    ep -->|"PATCH image / disk /<br>registry / env"| rel
+    rel --> old
+    rel --> new
+    ep -->|"PATCH workers /<br>scaling / timeout<br>(no release)"| as
+```
 
 - **An endpoint keeps its own copy of the container settings** (`image`,
   `disk`, `registry`, `env`). The template is copied into the endpoint once,
@@ -30,6 +55,10 @@ these rules. Everything here uses the management API v2
 - **Env values on an endpoint are its own copy too.** Change a value on the
   template and on the endpoint. To keep a secret out of plain env, use a RunPod
   secret and set the value to `{{ RUNPOD_SECRET_<name> }}`.
+
+<br>
+
+---
 
 ## Pin images by digest, not by tag
 
@@ -48,7 +77,18 @@ it from CI. To check that a change is live, compare the endpoint's `image` with
 the digest you pushed, and look for `isStale` on the worker that ran your test
 job. A job sent right after a push often runs on a stale worker.
 
+<br>
+
+---
+
 ## GPU selection
+
+| Field | Meaning | Pitfall |
+|---|---|---|
+| `gpu.pools` | GPU pools in rent priority, up to three honored | a PATCH with `pools` alone clears `excludedTypes` |
+| `gpu.excludedTypes` | GPU type ids to leave out of those pools | send it with every `pools` change |
+| `gpu.minCudaVersion` | driver floor: that CUDA version or newer | use this, not `allowedCudaVersions` |
+| `gpu.allowedCudaVersions` | exact versions a host must report | can starve the endpoint of workers; v2 refuses it together with a floor |
 
 - An endpoint's GPUs are **pools** (`gpu.pools`, the `pool` field of
   `GET /v2/catalog/gpus`, for example `ADA_24`), minus **excluded types**
@@ -69,6 +109,10 @@ job. A job sent right after a push often runs on a stale worker.
   wheels have no Blackwell (sm_120) kernels; cu128 and later do. Do not add a
   Blackwell pool to an endpoint whose image predates cu128. Those workers crash
   with `no kernel image is available` before your handler loads.
+
+<br>
+
+---
 
 ## Cold starts
 
@@ -95,6 +139,10 @@ in (`docs/images.md`), the pull is the cost that grows with image size.
   rollout can stall with no error anywhere. Baking the weights avoids that
   dependency.
 
+<br>
+
+---
+
 ## Inside the handler
 
 - **Load the model at import**, not per job.
@@ -118,6 +166,10 @@ in (`docs/images.md`), the pull is the cost that grows with image size.
   running, so do not treat one 404 as a terminal state.
 - **Return a storage key or URL, not the bytes**, for anything large: upload
   the output to object storage from the worker and return its location.
+
+<br>
+
+---
 
 ## Limits worth knowing
 

@@ -9,6 +9,44 @@ loopback, and you reach it in one of two ways:
    Cloudflare account, and the app is served at a hostname of yours behind
    Cloudflare Access.
 
+```mermaid
+graph LR
+    subgraph Local["Your machine"]
+        browser["<b>Browser</b>"]
+        fwd["<b>127.0.0.1:RUNPOD_TUNNEL_PORT</b><br>ssh -L, control master"]
+        watch["<b>Watcher</b><br>socket check 5 s<br>app probe 15 s"]
+    end
+
+    subgraph Edge["Cloudflare"]
+        access["<b>Access</b><br>login policy"]
+        host["<b>ui.example.com</b>"]
+    end
+
+    subgraph Pod["RunPod pod (publishes 22/tcp only)"]
+        sshd["<b>sshd</b> :22<br>key auth only"]
+        app["<b>App</b><br>127.0.0.1:POD_APP_PORT"]
+        cfd["<b>cloudflared</b><br>token from SSH stdin"]
+    end
+
+    browser -->|"1. SSH tunnel"| fwd -->|"direct SSH mapping"| sshd --> app
+    watch -.->|"reopens on drop or jam"| fwd
+    browser -->|"2. HTTPS"| host --> access
+    cfd -->|"dials out"| host
+    cfd --> app
+```
+
+| | SSH tunnel | Cloudflare Tunnel |
+|---|---|---|
+| **Always on** | yes | only with `CF_TUNNEL_NAME` and `CF_PUBLIC_HOSTNAME` set |
+| **Reachable from** | the machine that ran `pod.sh` | any device that passes your Access policy |
+| **Login** | your SSH key | Cloudflare Access (one-time PIN, SSO, identity provider) |
+| **Large uploads** | slow on some routes; a drop restarts a single-request upload | fast (nearby edge); 100 MB per request on Free and Pro |
+| **Address** | `http://127.0.0.1:<port>`, per recipe | a stable HTTPS hostname, whatever pod is running |
+
+<br>
+
+---
+
 ## Why not RunPod's HTTP proxy or a public port
 
 RunPod can publish a port as `https://<pod>-<port>.proxy.runpod.net` or as a
@@ -23,6 +61,10 @@ kit refuses that shape:
 - Apps listen on `127.0.0.1` (`COMFYUI_LISTEN`, `FACEFUSION_LISTEN`).
 - sshd takes keys only: RunPod injects the SSH public keys from your account
   settings as `PUBLIC_KEY`. A container with no key refuses to start.
+
+<br>
+
+---
 
 ## The SSH tunnel
 
@@ -50,6 +92,10 @@ uses the pod's direct SSH mapping (a public IP and port). Each pod generates
 new host keys at boot, so there is no key to pin, and the tunnel trusts
 whatever answers on that mapping.
 
+<br>
+
+---
+
 ## Why add a Cloudflare Tunnel
 
 The SSH tunnel is enough for driving a UI. It is slow for large uploads: an
@@ -69,6 +115,10 @@ uploads a large file in one request gets an error above that. The ComfyUI
 recipe sends uploads in resumable chunks under that cap (`chunked_upload`).
 Upstream FaceFusion sends each upload in one request, so for large files use
 `scp` or the SSH tunnel.
+
+<br>
+
+---
 
 ## Setting up a Cloudflare Tunnel
 
@@ -122,6 +172,10 @@ address and how many connections the tunnel holds.
 The image only needs the `cloudflared` binary (pinned and checksummed in each
 recipe's Dockerfile). With `CF_TUNNEL_NAME` empty, a recipe uses the SSH tunnel
 only and the binary does nothing.
+
+<br>
+
+---
 
 ## Getting files off the pod
 

@@ -4,6 +4,10 @@ How the recipes' Dockerfiles are put together, and why. All of it comes down to
 two goals: a pod or worker should start fast and not download anything inside
 billed time, and a broken image should fail the build, not a billed GPU.
 
+<br>
+
+---
+
 ## Bake the models in
 
 Each recipe downloads its models at build time, into the image:
@@ -25,10 +29,39 @@ A model downloaded into your image is still under its own license. Check the
 license before you use the image for anything beyond personal use. These
 recipes publish Dockerfiles only, never built images.
 
+<br>
+
+---
+
 ## Layer layout
 
 Layer order and size decide how fast a pod starts and how much each release
 pushes:
+
+```mermaid
+graph BT
+    subgraph models["Stage: models (alpine)"]
+        dl["download, pinned URL<br>sha256 check<br>touch -d @0"]
+    end
+
+    subgraph final["Final image, bottom to top = least to most volatile"]
+        base["<b>nvidia/cuda runtime</b><br>CUDA + cuDNN"]
+        os["OS packages, Python"]
+        cu["CUDA wheels<br>grouped RUN layers"]
+        torch["torch (thin layer)"]
+        m1["model layer 1<br>COPY --link"]
+        m2["model layer 2<br>COPY --link"]
+        mn["model layer n<br>COPY --link"]
+        app["app at a pinned tag<br>+ build-time check"]
+        tools["sshd, cloudflared, FFmpeg"]
+        scripts["start.sh, custom nodes<br>changes most"]
+    end
+
+    base --> os --> cu --> torch --> m1 --> m2 --> mn --> app --> tools --> scripts
+    dl -.->|"--link: independent of<br>the layers below"| m1
+    dl -.-> m2
+    dl -.-> mn
+```
 
 - **Download models in a separate build stage and `COPY --link` them in.** A
   `--link` layer does not depend on the layers below it, so a change to the
@@ -53,23 +86,29 @@ pushes:
   those pins, because torch would then pull a second copy into its own layer
   and undo the split.
 
+<br>
+
+---
+
 ## Fail the build, not the pod
 
 Every recipe checks its own stack while building:
 
-- ComfyUI starts with `--quick-test-for-ci --cpu`, and the build fails on
-  `IMPORT FAILED`.
-- FaceFusion's image asserts that onnxruntime has the CUDA execution provider,
-  that only the GPU wheel is installed (a CPU wheel installed next to it
-  shadows the CUDA build), and that the version is outside a range known to
-  leak memory.
-- The Whisper worker loads the model on the CPU.
-- FFmpeg builds are checked for the encoders the app needs (`h264_nvenc`,
-  `libx264`).
+| Recipe | Build-time check | Catches |
+|---|---|---|
+| `comfyui-upscale` | ComfyUI starts with `--quick-test-for-ci --cpu`; the build fails on `IMPORT FAILED` | a custom node or dependency that does not import |
+| `comfyui-upscale` | `verify-torch-deps.py` compares the pre-installed CUDA wheels with torch's pins | a torch bump that would pull a second copy of the CUDA libraries |
+| `facefusion` | onnxruntime has the CUDA execution provider, only the GPU wheel is installed, and the version is outside a range known to leak memory | a CPU wheel shadowing the CUDA build; a leaking release |
+| `whisper` | decodes a generated WAV, then loads the model on the CPU | a decoder library that broke its API; a missing or corrupt model |
+| all with video | FFmpeg lists the encoders the app needs (`h264_nvenc`, `libx264`) | an FFmpeg build without them |
 
 At start, `start.sh` repeats the check that needs a GPU, then refuses to run
 when CUDA is missing. An app that falls back to the CPU on a billed GPU pod
 is worse than one that exits.
+
+<br>
+
+---
 
 ## CUDA base image
 
@@ -88,6 +127,10 @@ checked by sha256, which loads NVENC from the driver at runtime. Match the
 build's NVENC API level to the hosts' drivers: a build that asks for a newer
 API than the host driver offers cannot encode.
 
+<br>
+
+---
+
 ## CPU quota and thread pools
 
 A container sees every CPU on the host (`nproc` can report 128) but runs on a
@@ -103,6 +146,10 @@ Signs: `nr_throttled` climbing in `/sys/fs/cgroup/cpu.stat`, and low GPU use.
 - onnxruntime sizes each session's intra-op pool to the host's physical cores
   unless the app sets `SessionOptions`. Check whether your app does. If it
   does not, throttling shows up as low GPU use with all cores busy.
+
+<br>
+
+---
 
 ## Access from inside the image
 
