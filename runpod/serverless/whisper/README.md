@@ -88,6 +88,7 @@ The parts of this worker that carry over to any serverless worker:
 ## How a Job Runs
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{'actorBkg':'#efb146','actorBorder':'#a96a19','actorTextColor':'#0c0f0e','actorLineColor':'#a96a19','signalColor':'#a96a19','signalTextColor':'#a96a19','noteBkgColor':'#1b221f','noteBorderColor':'#2e3733','noteTextColor':'#e7ece8','activationBkgColor':'#efb146','activationBorderColor':'#a96a19','labelBoxBkgColor':'#1b221f','labelBoxBorderColor':'#2e3733','labelTextColor':'#e7ece8','loopTextColor':'#a96a19'}}}%%
 sequenceDiagram
     autonumber
     participant C as Your service
@@ -202,6 +203,10 @@ graph LR
     build -->|"digest output"| pin
     pin --> tpl
     pin --> ep
+    classDef default fill:#efb146,stroke:#a96a19,stroke-width:2px,color:#0c0f0e
+    classDef quiet fill:#1b221f,stroke:#2e3733,stroke-width:2px,color:#e7ece8
+    linkStyle default stroke:#efb146,stroke-width:2px
+    class tpl,ep quiet
 ```
 
 Pinning by digest matters: pushing a new image under the same tag does not

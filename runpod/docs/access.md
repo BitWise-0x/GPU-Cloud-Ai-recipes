@@ -33,6 +33,13 @@ graph LR
     browser -->|"2. HTTPS"| host --> access
     cfd -->|"dials out"| host
     cfd --> app
+    classDef default fill:#efb146,stroke:#a96a19,stroke-width:2px,color:#0c0f0e
+    classDef quiet fill:#1b221f,stroke:#2e3733,stroke-width:2px,color:#e7ece8
+    linkStyle default stroke:#efb146,stroke-width:2px
+    class browser,access,host quiet
+    style Local fill:transparent,stroke:#a96a19,stroke-width:1px,stroke-dasharray:5 4,color:#a96a19
+    style Edge fill:transparent,stroke:#a96a19,stroke-width:1px,stroke-dasharray:5 4,color:#a96a19
+    style Pod fill:transparent,stroke:#a96a19,stroke-width:1px,stroke-dasharray:5 4,color:#a96a19
 ```
 
 | | SSH tunnel | Cloudflare Tunnel |

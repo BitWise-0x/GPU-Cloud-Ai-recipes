@@ -79,6 +79,10 @@ graph TD
 
     photo --> p_out["one frame per job:<br>no encode, little CPU work"]
     video --> v_out["decode, detect, mask, paste-back on CPU<br>swap on GPU<br>encode on NVENC"]
+    classDef default fill:#efb146,stroke:#a96a19,stroke-width:2px,color:#0c0f0e
+    classDef quiet fill:#1b221f,stroke:#2e3733,stroke-width:2px,color:#e7ece8
+    linkStyle default stroke:#efb146,stroke-width:2px
+    class p_out,v_out quiet
 ```
 
 | | `photo` | `video` |

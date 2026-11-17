@@ -39,6 +39,10 @@ graph TD
     floor -->|"no"| retries
     retries -->|"yes"| wait --> walk
     retries -->|"no"| giveup
+    classDef default fill:#efb146,stroke:#a96a19,stroke-width:2px,color:#0c0f0e
+    classDef quiet fill:#1b221f,stroke:#2e3733,stroke-width:2px,color:#e7ece8
+    linkStyle default stroke:#efb146,stroke-width:2px
+    class giveup quiet
 ```
 
 | Knob | Default in the kit | Effect |

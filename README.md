@@ -156,6 +156,12 @@ graph LR
     you -->|"HTTPS"| cf
     pod -.->|"cloudflared dials out"| cf
     you -->|"runpod_deploy.py run<br>or your service"| ep
+    classDef default fill:#efb146,stroke:#a96a19,stroke-width:2px,color:#0c0f0e
+    classDef quiet fill:#1b221f,stroke:#2e3733,stroke-width:2px,color:#e7ece8
+    linkStyle default stroke:#efb146,stroke-width:2px
+    class you,cf,reg quiet
+    style Build fill:transparent,stroke:#a96a19,stroke-width:1px,stroke-dasharray:5 4,color:#a96a19
+    style RunPod fill:transparent,stroke:#a96a19,stroke-width:1px,stroke-dasharray:5 4,color:#a96a19
 ```
 
 <br>
@@ -208,3 +214,11 @@ MIT License, see [LICENSE](LICENSE) for details.
 The software and model weights the Dockerfiles download keep their own
 licenses, and some are non-commercial or share-alike. Check them before you
 use an image beyond personal use.
+
+<br>
+
+---
+
+<p align="center">
+  <sub>A <a href="https://bitwise0x.com"><b>BitWise</b></a> product</sub>
+</p>

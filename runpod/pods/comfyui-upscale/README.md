@@ -74,6 +74,12 @@ graph LR
     src --> clean --> up --> rs1 --> out
     src --> rs2 --> sv --> out
     src -->|"audio"| out
+    classDef default fill:#efb146,stroke:#a96a19,stroke-width:2px,color:#0c0f0e
+    classDef quiet fill:#1b221f,stroke:#2e3733,stroke-width:2px,color:#e7ece8
+    linkStyle default stroke:#efb146,stroke-width:2px
+    class bm,clean quiet
+    style Fast fill:transparent,stroke:#a96a19,stroke-width:1px,stroke-dasharray:5 4,color:#a96a19
+    style Seed fill:transparent,stroke:#a96a19,stroke-width:1px,stroke-dasharray:5 4,color:#a96a19
 ```
 
 Both process the video in chunks of frames (VideoHelperSuite's Meta Batch

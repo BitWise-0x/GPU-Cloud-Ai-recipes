@@ -89,6 +89,7 @@ cp pod.env.example pod.env      # edit RUNPOD_IMAGE, GPU lists, ports
 ### What `start` does
 
 ```mermaid
+%%{init: {'theme':'base','themeVariables':{'actorBkg':'#efb146','actorBorder':'#a96a19','actorTextColor':'#0c0f0e','actorLineColor':'#a96a19','signalColor':'#a96a19','signalTextColor':'#a96a19','noteBkgColor':'#1b221f','noteBorderColor':'#2e3733','noteTextColor':'#e7ece8','activationBkgColor':'#efb146','activationBorderColor':'#a96a19','labelBoxBkgColor':'#1b221f','labelBoxBorderColor':'#2e3733','labelTextColor':'#e7ece8','loopTextColor':'#a96a19'}}}%%
 sequenceDiagram
     autonumber
     participant K as pod.sh
