@@ -126,17 +126,27 @@ measured results):
 
 | Problem | Try |
 |---|---|
-| Side profiles, detection drops out | `--face-detector-model many`, `--face-detector-score 0.35`, `--face-tracker-score 0.25` |
+| Head turns toward profile, swap drops out | `--face-detector-model retinaface`, `--face-detector-score 0.35`, `--face-landmarker-model hrffa`, `--reference-face-distance 0.45` |
+| Face detected but turned frames stay unswapped | raise `--reference-face-distance` by 0.05, up to 0.5, or pick the reference on a three-quarter frame |
 | Hands, hair, glasses or a mic over the face | `--face-mask-types box occlusion` |
 | Swap bleeds into hair or background | add `region` to the mask types; raise `--face-mask-padding` |
 | Visible seam at the edge | `--face-mask-blur 0.4` to `0.5` |
-| Flicker or identity jumping between frames | `--face-tracker-score 0.2` to `0.3` |
+| Swap blinks out for a few frames | `--face-tracker-score 0.2` to `0.3`, `--target-frame-amount 3` to `5` |
+| Swap jitters on hard angles | `--face-landmarker-model hrffa`, or lower `--face-landmarker-score` |
 | Wrong person swapped | `--face-selector-mode reference`, a clear frontal reference frame, lower `--reference-face-distance` |
-| Soft swap on a close face | `--face-swapper-pixel-boost 512x512` or higher |
+| Close-up filling the frame | `--face-detector-margin 20`, `--face-swapper-pixel-boost 768x768` |
 | Restored face looks plastic | lower `--face-enhancer-blend` to 50 to 60 |
 
 `face_detector_angles` rotates the frame in-plane: it finds tilted or
-upside-down heads, not profiles.
+upside-down heads, not profiles. Each angle is a full detector pass.
+
+The tracker fills frames where detection missed, up to
+`2 x target-frame-amount - 1` frames. It does not smooth detected faces or
+fix a reference mismatch.
+
+`--reference-face-distance` is `1 - cosine similarity` scaled to 0..1:
+higher is more lenient. `one` and `many` selector modes check gender, race
+and age on every frame, so `reference` is steadier for one person.
 
 **Source photos:** 3 to 8 sharp, well-lit photos of the same person, frontal
 to three-quarter view, nothing over the face, with some variety in light and

@@ -42,8 +42,8 @@ RUN wget -q ${A}/models-3.0.0/simswap_unofficial_512.onnx \
 RUN wget -q ${A}/models-3.0.0/inswapper_128.onnx \
       && wget -q ${A}/models-3.0.0/inswapper_128.hash
 
-# Face detectors. yoloface_8n = default; retinaface_10g + scrfd_2.5g let
-# --face-detector-model many run for hard angles and profiles.
+# Face detectors. yoloface_8n = default; retinaface_10g for turned, small
+# and partly hidden faces; scrfd_2.5g completes --face-detector-model many.
 RUN wget -q ${A}/models-3.0.0/yoloface_8n.onnx \
       && wget -q ${A}/models-3.0.0/yoloface_8n.hash
 RUN wget -q ${A}/models-3.0.0/retinaface_10g.onnx \
